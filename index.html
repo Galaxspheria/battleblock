@@ -1,0 +1,174 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font: 12pt Helvetica, Arial; background-color: #F9F9F9; }
+        .right-text, .left-text { width: 50%; top: 0; height: 100%; position: absolute; padding: 20px; -webkit-transition: all 200ms; transition: all 200ms; word-wrap: break-word; }
+        .right-text { right: 0; background-color: #0B0B0B; color: #F9F9F9; cursor: not-allowed; }
+        .left-text { left: 0; background-color: #F9F9F9; color: #0B0B0B; }
+        .inner-text { width: 100%; height: 100%; font-size: 12pt; padding: 40px; overflow: scroll; }
+        #m { border: 0; background-color: rgba(0,0,0,0); }
+        #m:active, #m:focus  { border: 0; background-color: rgba(0,0,0,0); outline: none; }
+        .header { font-size: 18pt; }
+        .time-label, .subtext { color: #999999; }
+        .subtext { text-align: center; padding: 5px;}
+        .score-label { display: inline-block; float: right; font-weight: bold; }
+        #roomEnabled, #menuLoading, #menuStarting, #menuPulse { display: none; }
+        #countdown { font-size: 20pt; font-weight: bold; color: #F13C69; }
+        #prompt { color: #0B0B0B; font-weight: bold; }
+        #roomDisabled { height: 100vh; }
+        .menu-core { display: flex; align-items: center; justify-content: center; height: 90%; }
+        .menu-top { margin: auto; text-align: center; height: 5%; }
+        .menu-img { max-width: 35%; padding: 2.5%; }
+        button { -webkit-transition: all 200ms; transition: all 200ms; background-color: rgba(0,0,0,0); border: 1px solid #F13C69; padding: 10px; font-weight: bold; text-transform: uppercase; color: #F13C69; font-size: 14pt; }
+        button.green { color: #3CF187; border-color: #3CF187; }
+        button:hover { background-color: #F13C69; color: #F9F9F9; cursor: pointer; }
+        button.green:hover { background-color: #3CF187; }
+        .lds-ellipsis { display: block; margin: auto; text-align: center; position: relative; width: 64px; height: 64px; } .lds-ellipsis div { position:
+        absolute; top: 27px; width: 11px; height: 11px; border-radius: 50%; background: #F13C69; animation-timing-function:
+        cubic-bezier(0, 1, 1, 0); } .lds-ellipsis div:nth-child(1) { left: 6px; animation: lds-ellipsis1 0.6s infinite; }
+        .lds-ellipsis div:nth-child(2) { left: 6px; animation: lds-ellipsis2 0.6s infinite; } .lds-ellipsis div:nth-child(3) {
+        left: 26px; animation: lds-ellipsis2 0.6s infinite; } .lds-ellipsis div:nth-child(4) { left: 45px; animation:
+        lds-ellipsis3 0.6s infinite; } @keyframes lds-ellipsis1 { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        @keyframes lds-ellipsis3 { 0% { transform: scale(1); } 100% { transform: scale(0); } } @keyframes lds-ellipsis2 { 0% {
+        transform: translate(0, 0); } 100% { transform: translate(19px, 0); } }
+        @keyframes radial-pulse { 0% { box-shadow: 0 0 0 0px #F13C69; } 100% { box-shadow: 0 0 0 100vh rgba(0, 0, 0, 0); } }
+        @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+        #menuStarting, #roomDisabled, #roomEnabled { animation: fadein 1s ease-out; }
+        .pulser { width: 1px; height: 1px; border-radius: 50%; animation: radial-pulse 1s; }
+        ::selection { background: #3CF187; } ::-moz-selection { background: #3CF187; }
+        textarea { resize: none; }
+    </style>
+  </head>
+  <body>
+    <div id="roomDisabled">
+        <div class="menu-top">
+            <img class="menu-img" src="/battleblock.svg" />
+        </div>
+        <div class="menu-core">
+            <div id="menuSelect">
+                <div class="subtext">
+                    Select your gamemode
+                </div>
+                <button id="menuPrompt">Prompt</button>
+                <button id="menyFree">Free Write</button>
+            </div>
+            <div id="menuPulse">
+                <div class="pulser"></div>
+            </div>
+            <div id="menuLoading">
+                <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+                <div class="subtext">
+                    Waiting for someone to join...
+                </div>
+            </div>
+            <div id="menuStarting">
+                <div class="subtext">
+                    <span id="prompt">—</span>
+                </div>
+                <div class="subtext">
+                    <span id="countdown">5</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="roomEnabled">
+        <div class="right-text">
+            <header class="header">
+                <span id="timeB" class="time-label">—</span>
+                <span id="scoreB" class="score-label">0</span>
+            </header>
+            <p class="inner-text" id="otherText">—</p>
+        </div>
+        <div class="left-text">
+            <header class="header">
+                <span id="timeA" class="time-label">—</span>
+                <span id="scoreA" class="score-label">0</span>
+            </header>
+            <textarea class="inner-text" id="m" autocomplete="off" data-gramm_editor="false">—</textarea>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+        $(function () {
+            var prompt = '';
+            var promptLength = 0;
+            var socket = io();
+            $('#m').on('input', function () {
+                if ($('#m').val().length < promptLength) {
+                    $('#m').val(prompt);
+                    socket.emit('update text', prompt);
+                } else {
+                    socket.emit('update text', $('#m').val());
+                }
+                return false;
+            });
+            $('#menuPrompt').click(function () {
+                socket.emit('join game queue');
+                $('#menuLoading').css("display", "block");
+                $('#menuSelect').css("display", "none");
+            })
+            socket.on('update text', function (msg) {
+                $('#otherText').text(msg);
+            });
+            socket.on('start room', function (promptObject) {
+                $('#menuPulse').css("display", "block");
+                $('#menuLoading').css("display", "none");
+                prompt = promptObject; // temp
+                promptLength = prompt.length;
+                $('#prompt').text(prompt);
+                $('#otherText').text(prompt);
+                $('#m').val(prompt);
+                setTimeout( function() {
+                    $('#menuStarting').css("display", "block");
+                    $('#menuPulse').css("display", "none");
+                    let cd = 4;
+                    let cdTimer = setInterval(function () {
+                        $('#countdown').text(cd);
+                        cd--;
+                        if ( cd < 0) {
+                            clearInterval(cdTimer);
+                            $('#roomEnabled').css("display", "block");
+                            $('#roomDisabled').css("display", "none");
+                        }
+                    }, 1000)
+                }, 1000)
+            });
+            socket.on('time sync', function (timeRemainingInSeconds) {
+                var date = new Date(timeRemainingInSeconds * 1000);
+                var minutes = "" + date.getMinutes();
+                var seconds = "0" + date.getSeconds();
+                var timeRemaining = minutes.substr(-2) + ':' + seconds.substr(-2);
+                $('#timeA').text(timeRemaining);
+                $('#timeB').text(timeRemaining);
+            });
+            socket.on('end game', function () {
+                $('#timeA').text('Game Over');
+                $('#timeB').text('Game Over');
+            });
+            socket.on('update scores', function (scores) {
+                let scoreA = scores[socket.id];
+                delete scores[socket.id];
+                let scoreB = scores[Object.keys(scores)[0]];
+                $('#scoreA').text(scoreA);
+                $('#scoreB').text(scoreB);
+            });
+            socket.on('active user disconnect', function () {
+                $('.right-text').css("background-color", "#F13C69");
+                $('#otherText').text('Uh oh, your partner has disconnected! Finding a new one...');
+                setTimeout( function () {
+                    socket.emit('join game queue');
+                    $('#roomDisabled').css("display", "block");
+                    $('#roomEnabled').css("display", "none");
+                    $('#menuLoading').css("display", "block");
+                    $('#menuStarting').css("display", "none");
+                    $('.right-text').css("background-color", "#0B0B0B");
+                }, 3000);
+            });
+        });
+    </script>
+  </body>
+</html>

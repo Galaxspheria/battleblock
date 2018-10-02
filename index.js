@@ -62,7 +62,6 @@ io.on('connection', function (socket) {
             // handle scoring, word suggestions
             // handle line breaks not transferring
             // initial description page/blurb
-            // git
 
         } else {
             waiting.push(socket);

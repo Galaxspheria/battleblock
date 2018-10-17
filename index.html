@@ -8,27 +8,52 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font: 12pt Helvetica, Arial; background-color: #F9F9F9; }
-        .right-text, .left-text { width: 50%; top: 0; height: 100%; position: absolute; padding: 20px; -webkit-transition: all 200ms; transition: all 200ms; word-wrap: break-word; }
+        .right-text, .left-text { width: 50%; top: 0; height: 100%; position: absolute; padding: 20px; -webkit-transition: all 200ms; transition: all 200ms; word-wrap: break-word; display: flex; flex-direction: column; }
         .right-text { right: 0; background-color: #0B0B0B; color: #F9F9F9; cursor: not-allowed; }
         .left-text { left: 0; background-color: #F9F9F9; color: #0B0B0B; }
-        .inner-text { width: 100%; height: 100%; font-size: 12pt; padding: 40px; overflow: scroll; white-space: pre-wrap; }
+        .inner-text { width: 100%; height: 100%; font-size: 12pt; padding: 40px; overflow: scroll; white-space: pre-wrap; position: relative; flex-grow: 1; flex-shrink: 1; }
         #m { border: 0; background-color: rgba(0,0,0,0); }
         #m:active, #m:focus  { border: 0; background-color: rgba(0,0,0,0); outline: none; }
         .header { font-size: 18pt; }
+        .header, .footer { flex-shrink: 0; flex-grow: 0; }
+        .footer button, .footer a, .footer a:visited { background-color: rgba(0,0,0,0); border: none; padding: 0; cursor: pointer; -webkit-transition: all 200ms; transition: all 200ms; font-size: 14pt; }
+        .footer button:active { outline: none; }
+        .footer button:hover, .footer a:hover { background-color: rgba(0,0,0,0); color: #999999; }
+        .footer.other-user { color: rgba(255, 255, 255, 0.2); text-align: center; }
+        .export-icon { float: right; }
+        .export-icon, .back-icon { color: rgba(0, 0, 0, 0.2); }
         .time-label, .subtext { color: #999999; }
         .subtext { text-align: center; padding: 5px;}
+        .blurb { padding: 5px; max-width: 50%; display: block; margin: auto; line-height: 150%; color: #999999; }
+        .blurb.white { color: #F9F9F9; }
+        .blurb.center { text-align: center; }
+        .emphasis { font-weight: bold; color: #F13C69; }
         .score-label { display: inline-block; float: right; font-weight: bold; }
-        #roomEnabled, #menuLoading, #menuStarting, #menuPulse { display: none; }
+        #roomEnded { cursor: default; position: absolute; top: 0; bottom: 0; left: 0; right: 0; z-index: 1; display: flex;  align-items: center; justify-content: center; background-color: #0B0B0B; }
+        #roomEnabled, #menuLoading, #menuStarting, #menuPulse, #roomEnded { display: none; }
         #countdown { font-size: 20pt; font-weight: bold; color: #F13C69; }
         #prompt { color: #0B0B0B; font-weight: bold; }
         #roomDisabled { height: 100vh; }
+        .over-header { color: #999999; }
+        .over-score { font-size: 30pt; margin-top: 10px;}
+        .over-winner { color: #F13C69; font-size: 20pt; margin: 20px; }
         .menu-core { display: flex; align-items: center; justify-content: center; height: 90%; }
-        .menu-top { margin: auto; text-align: center; height: 5%; }
+        .menu-top, .menu-bottom { margin: auto; text-align: center; height: 5%; }
+        .menu-bottom { font-size: 10pt; color: rgba(0, 0, 0, 0.2); }
+        .menu-bottom a, .menu-bottom a:visited { color: rgba(0, 0, 0, 0.2); }
         .menu-img { max-width: 35%; padding: 2.5%; }
+        .heart { color: #F13C69; font-size: 1.2em; }
         button { -webkit-transition: all 200ms; transition: all 200ms; background-color: rgba(0,0,0,0); border: 1px solid #F13C69; padding: 10px; font-weight: bold; text-transform: uppercase; color: #F13C69; font-size: 14pt; }
         button.green { color: #3CF187; border-color: #3CF187; }
+        button.black { color: #0B0B0B; border-color: #0B0B0B; }
         button:hover { background-color: #F13C69; color: #F9F9F9; cursor: pointer; }
         button.green:hover { background-color: #3CF187; }
+        button.black:hover { background-color: #0B0B0B; }
+        button.alt { padding: 0; border: none; font-size: 12pt; text-transform: none; }
+        button.alt:hover { text-decoration: underline; background-color: rgba(0, 0, 0, 0); }
+        button.alt.light { color: #999999; font-size: 10pt; }
+        button.alt.light:hover { color: #F13C69; }
+        button.block { display: block; margin: auto; }
         .lds-ellipsis { display: block; margin: auto; text-align: center; position: relative; width: 64px; height: 64px; } .lds-ellipsis div { position:
         absolute; top: 27px; width: 11px; height: 11px; border-radius: 50%; background: #F13C69; animation-timing-function:
         cubic-bezier(0, 1, 1, 0); } .lds-ellipsis div:nth-child(1) { left: 6px; animation: lds-ellipsis1 0.6s infinite; }
@@ -39,9 +64,9 @@
         transform: translate(0, 0); } 100% { transform: translate(19px, 0); } }
         @keyframes radial-pulse { 0% { box-shadow: 0 0 0 0px #F13C69; } 100% { box-shadow: 0 0 0 100vh rgba(0, 0, 0, 0); } }
         @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
-        #menuStarting, #roomDisabled, #roomEnabled { animation: fadein 1s ease-out; }
+        #menuStarting, #roomDisabled, #roomEnabled, #roomEnded { animation: fadein 1s ease-out; }
         .pulser { width: 1px; height: 1px; border-radius: 50%; animation: radial-pulse 1s; }
-        ::selection { background: #3CF187; } ::-moz-selection { background: #3CF187; }
+        ::selection { background: rgba(241,60,105, 0.2); } ::-moz-selection { background: rgba(241,60,105, 0.2); }
         textarea { resize: none; }
     </style>
   </head>
@@ -52,11 +77,20 @@
         </div>
         <div class="menu-core">
             <div id="menuSelect">
-                <div class="subtext">
-                    Select your gamemode
-                </div>
-                <button id="menuPrompt">Prompt</button>
-                <button id="menyFree">Free Write</button>
+                <p class="blurb center">
+                    Struggling with <span class="emphasis">writer's block?</span>
+                </p>
+                <p class="blurb">
+                    Don't know where to start? Just can't motivate yourself to put words on the page?
+                    Tap into your competitive side to <span class="emphasis">get unstuck with a friend (or stranger)!</span> Get started with a creative prompt and
+                    then dive into free write on whatever you need, staying motivated with a little (friendly) competition.
+                </p>
+                <p class="blurb center">
+                    <button id="menuPrompt">Get Started</button>
+                </p>
+                <p class="blurb center">
+                    <button class="alt light block" id="menuFree">or go straight to free writing</button>
+                </p>
             </div>
             <div id="menuPulse">
                 <div class="pulser"></div>
@@ -76,21 +110,57 @@
                 </div>
             </div>
         </div>
+        <div class="menu-bottom">
+            Made with <span class="heart">&hearts;</span> by Hunter Hancock. Inspired by <a href="https://www.themostdangerouswritingapp.com">themostdangerouswritingapp.com</a>.
+        </div>
     </div>
     <div id="roomEnabled">
         <div class="right-text">
+            <div id="roomEnded">
+                <div>
+                    <!--
+                    <div class="blurb center white">
+                        <div class="over-header">ROUND OVER</div>
+                        <div class="over-score"><span id="finalScoreA">0</span> - <span id="finalScoreB">0</span></div>
+                        <div class="over-winner" id="finalWinner">You win!</div>
+                        <hr/>
+                    </div>
+                    -->
+                    <p class="blurb center">
+                        Now that you've got your creative juices flowing, you're ready to
+                    </p>
+                    <p class="blurb center">
+                        <button class="block" id="endedFree">Free Write!</button>
+                    </p>
+                    <p class="blurb center">
+                        or, if you prefer,
+                        <button class="alt block" id="endedPrompt">another prompt!</button>
+                    </p>
+                </div>
+            </div>
             <header class="header">
                 <span id="timeB" class="time-label">—</span>
+                <!--
                 <span id="scoreB" class="score-label">0</span>
+                -->
             </header>
             <p class="inner-text" id="otherText">—</p>
+            <footer class="footer other-user">
+                <i class="user-icon fa fa-user-ninja"></i> Anonymous Author
+            </footer>
         </div>
         <div class="left-text">
             <header class="header">
                 <span id="timeA" class="time-label">—</span>
+                <!--
                 <span id="scoreA" class="score-label">0</span>
+                -->
             </header>
             <textarea class="inner-text" id="m" autocomplete="off" data-gramm_editor="false">—</textarea>
+            <footer class="footer">
+                <button id="back" class="back-icon"><i class="fa fa-chevron-left"></i></button>
+                <a id="export" class="export-icon"><i class="fa fa-share"></i></a>
+            </footer>
         </div>
     </div>
     <script src="/socket.io/socket.io.js"></script>
@@ -100,6 +170,22 @@
             var prompt = '';
             var promptLength = 0;
             var socket = io();
+            var startLoading = function () {
+                $('#menuLoading').css("display", "block");
+                $('#menuStarting').css("display", "none");
+                $('#menuSelect').css("display", "none");
+                $('#roomEnded').css("display", "none");
+                $('#roomEnabled').css("display", "none");
+                $('#roomDisabled').css("display", "block");
+            }
+            var joinQueue = function () {
+                socket.emit('join game queue', 'prompted');
+                startLoading();
+            }
+            var joinFreeWrite = function () {
+                socket.emit('join game queue', 'freewrite');
+                startLoading();
+            }
             $('#m').on('input', function () {
                 if ($('#m').val().length < promptLength) {
                     $('#m').val(prompt);
@@ -109,15 +195,22 @@
                 }
                 return false;
             });
-            $('#menuPrompt').click(function () {
-                socket.emit('join game queue');
-                $('#menuLoading').css("display", "block");
-                $('#menuSelect').css("display", "none");
-            })
+            $('#menuPrompt').click(joinQueue);
+            $('#menuFree').click(joinFreeWrite);
+            $('#endedPrompt').click(joinQueue);
+            $('#endedFree').click(joinFreeWrite);
+            $('#export').click(function () {
+                var button = document.getElementById('export');
+                button.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent($('#m').val());
+                button.download = 'battle_block_export_' + new Date().toLocaleDateString() + '.txt';
+            });
+            $('#back').click(function () {
+                location.reload();
+            });
             socket.on('update text', function (msg) {
                 $('#otherText').text(msg);
             });
-            socket.on('start room', function (promptObject) {
+            socket.on('start prompted room', function (promptObject) {
                 $('#menuPulse').css("display", "block");
                 $('#menuLoading').css("display", "none");
                 prompt = promptObject; // temp
@@ -136,8 +229,27 @@
                             clearInterval(cdTimer);
                             $('#roomEnabled').css("display", "block");
                             $('#roomDisabled').css("display", "none");
+                            $('#m').prop('readonly', false);
                         }
                     }, 1000)
+                }, 1000)
+            });
+            socket.on('start freewrite room', function (promptObject) {
+                $('#menuPulse').css("display", "block");
+                $('#menuLoading').css("display", "none");
+                prompt = '';
+                promptLength = prompt.length;
+                $('#prompt').text(prompt);
+                $('#otherText').text(prompt);
+                $('#m').val(prompt);
+                setTimeout(function () {
+                    $('#menuStarting').css("display", "block");
+                    $('#menuPulse').css("display", "none");
+                    $('#roomEnabled').css("display", "block");
+                    $('#roomDisabled').css("display", "none");
+                    $('#timeA').text('—');
+                    $('#timeB').text('—');
+                    $('#m').prop('readonly', false);
                 }, 1000)
             });
             socket.on('time sync', function (timeRemainingInSeconds) {
@@ -148,28 +260,43 @@
                 $('#timeA').text(timeRemaining);
                 $('#timeB').text(timeRemaining);
             });
-            socket.on('end game', function () {
-                $('#timeA').text('Game Over');
-                $('#timeB').text('Game Over');
+            socket.on('end game', function (/*finalScores*/) {
+                $('#timeA').text('—');
+                $('#timeB').text('—');
+                $('#roomEnded').css("display", "flex");
+                $('#roomEnded').css("position", "absolute");
+                $('#m').prop('readonly', true);
+                // let scoreA = finalScores[socket.id];
+                // delete finalScores[socket.id];
+                // let scoreB = finalScores[Object.keys(finalScores)[0]];
+                // $('#finalScoreA').text(scoreA);
+                // $('#finalScoreB').text(scoreB);
+                // if (scoreA > scoreB) {
+                //     $('#finalWinner').text("You win!");
+                // } else if (scoreB > scoreA) {
+                //     $('#finalWinner').text("You lose.");
+                // } else {
+                //     $('#finalWinner').text("Tie game!");
+                // }
             });
-            socket.on('update scores', function (scores) {
-                let scoreA = scores[socket.id];
-                delete scores[socket.id];
-                let scoreB = scores[Object.keys(scores)[0]];
-                $('#scoreA').text(scoreA);
-                $('#scoreB').text(scoreB);
-            });
+            // socket.on('update scores', function (scores) {
+            //     let scoreA = scores[socket.id];
+            //     delete scores[socket.id];
+            //     let scoreB = scores[Object.keys(scores)[0]];
+            //     $('#scoreA').text(scoreA);
+            //     $('#scoreB').text(scoreB);
+            // });
             socket.on('active user disconnect', function () {
                 $('.right-text').css("background-color", "#F13C69");
-                $('#otherText').text('Uh oh, your partner has disconnected! Finding a new one...');
+                $('#otherText').text('Uh oh, your partner has disconnected! Finding a new one in five seconds...');
                 setTimeout( function () {
-                    socket.emit('join game queue');
+                    socket.emit('join game queue', 'prompted');
                     $('#roomDisabled').css("display", "block");
                     $('#roomEnabled').css("display", "none");
                     $('#menuLoading').css("display", "block");
                     $('#menuStarting').css("display", "none");
                     $('.right-text').css("background-color", "#0B0B0B");
-                }, 3000);
+                }, 5000);
             });
         });
     </script>

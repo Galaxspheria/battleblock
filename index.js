@@ -1,5 +1,7 @@
 var express = require('express');
 var app = express();
+var favicon = require('serve-favicon')
+var path = require('path')
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
@@ -18,6 +20,8 @@ const PROMPTS = {
 function score (msg, prompt) {
     return Math.floor((msg.length - prompt.length) / 20) * 10;
 };
+
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')))
 
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');

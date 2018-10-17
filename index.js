@@ -67,12 +67,6 @@ io.on('connection', function (socket) {
                                 if (activeGames[room].time > 0) {
                                     activeGames[room].time--;
                                     io.in(room).emit('time sync', activeGames[room].time);
-                                    if (Math.random() * 50 < 1) {
-                                        console.log(Math.floor(Math.random() * CONSTANTS.WORDS.length))
-                                        console.log('random word:' + CONSTANTS.WORDS[Math.floor(Math.random() * CONSTANTS.WORDS.length)])
-                                        io.in(room).emit('random word', CONSTANTS.WORDS[Math.floor(Math.random() * CONSTANTS.WORDS.length)]);
-                                        // store in game state too
-                                    }
                                 } else {
                                     io.in(room).emit('end game');
                                     clearInterval(activeGames[room].timeLoop);

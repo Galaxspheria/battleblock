@@ -1,5 +1,3 @@
-const WORDS = ['Queso', 'Laptop', 'Tiger', 'Gobble', 'Instead'];
-
 const PROMPT_CONFIGS = [
     'adj+noun+verb',
     'adj+noun+adv',
@@ -13,6 +11,6 @@ const PROMPT_CONFIGS = [
     'noun+location'
 ];
 
-const GAMETIME = 306;
+const GAMETIME = 186;
 
-module.exports = { WORDS, PROMPT_CONFIGS, GAMETIME };
+module.exports = { PROMPT_CONFIGS, GAMETIME };

@@ -7,12 +7,10 @@ Don't know where to start? Just can't motivate yourself to put words on the page
 ## Try it out [here](https://battleblock.herokuapp.com/).
 
 #### TODO:
-- [ ] waiting messages (Keep it rough– no judgements here!)
 - [ ] loader only on one side if partner DCs during free write
 - [ ] domain?
 - [ ] google analytics
-- [ ] learn more page/more static info
-- [ ] word suggestions? decide to finish implementing or remove
+- [ ] learn more page/more static info. (Keep it rough– no judgements here!)
 - [ ] menu, usernames/ids? join room of your choice?`
 - [ ] mobile, responsive
 - [ ] link Hunter Hancock

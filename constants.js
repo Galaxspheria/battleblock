@@ -1,10 +1,3 @@
-const PROMPTS = {
-    'Write a Shakespearean sonnet about your favorite breakfast food.': {'time': 11},
-    'Write a passive-agressive haiku.': {'time': 11},
-    'It was seven in the morning, and Arnold was already ': {'time': 11},
-    'She suspected they would come, but she never thought they\'d come now.': {'time': 11}
-};
-
 const WORDS = ['Queso', 'Laptop', 'Tiger', 'Gobble', 'Instead'];
 
 const PROMPT_CONFIGS = [
@@ -22,4 +15,4 @@ const PROMPT_CONFIGS = [
 
 const GAMETIME = 306;
 
-module.exports = { PROMPTS, WORDS, PROMPT_CONFIGS, GAMETIME };
+module.exports = { WORDS, PROMPT_CONFIGS, GAMETIME };

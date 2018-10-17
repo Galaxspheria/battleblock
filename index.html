@@ -118,14 +118,6 @@
         <div class="right-text">
             <div id="roomEnded">
                 <div>
-                    <!--
-                    <div class="blurb center white">
-                        <div class="over-header">ROUND OVER</div>
-                        <div class="over-score"><span id="finalScoreA">0</span> - <span id="finalScoreB">0</span></div>
-                        <div class="over-winner" id="finalWinner">You win!</div>
-                        <hr/>
-                    </div>
-                    -->
                     <p class="blurb center">
                         Now that you've got your creative juices flowing, you're ready to
                     </p>
@@ -140,9 +132,6 @@
             </div>
             <header class="header">
                 <span id="timeB" class="time-label">—</span>
-                <!--
-                <span id="scoreB" class="score-label">0</span>
-                -->
             </header>
             <p class="inner-text" id="otherText">—</p>
             <footer class="footer other-user">
@@ -152,9 +141,6 @@
         <div class="left-text">
             <header class="header">
                 <span id="timeA" class="time-label">—</span>
-                <!--
-                <span id="scoreA" class="score-label">0</span>
-                -->
             </header>
             <textarea class="inner-text" id="m" autocomplete="off" data-gramm_editor="false">—</textarea>
             <footer class="footer">
@@ -210,10 +196,9 @@
             socket.on('update text', function (msg) {
                 $('#otherText').text(msg);
             });
-            socket.on('start prompted room', function (promptObject) {
+            socket.on('start prompted room', function (prompt) {
                 $('#menuPulse').css("display", "block");
                 $('#menuLoading').css("display", "none");
-                prompt = promptObject; // temp
                 promptLength = prompt.length;
                 $('#prompt').text(prompt);
                 $('#otherText').text(prompt);
@@ -234,7 +219,7 @@
                     }, 1000)
                 }, 1000)
             });
-            socket.on('start freewrite room', function (promptObject) {
+            socket.on('start freewrite room', function () {
                 $('#menuPulse').css("display", "block");
                 $('#menuLoading').css("display", "none");
                 prompt = '';
@@ -260,32 +245,13 @@
                 $('#timeA').text(timeRemaining);
                 $('#timeB').text(timeRemaining);
             });
-            socket.on('end game', function (/*finalScores*/) {
+            socket.on('end game', function () {
                 $('#timeA').text('—');
                 $('#timeB').text('—');
                 $('#roomEnded').css("display", "flex");
                 $('#roomEnded').css("position", "absolute");
                 $('#m').prop('readonly', true);
-                // let scoreA = finalScores[socket.id];
-                // delete finalScores[socket.id];
-                // let scoreB = finalScores[Object.keys(finalScores)[0]];
-                // $('#finalScoreA').text(scoreA);
-                // $('#finalScoreB').text(scoreB);
-                // if (scoreA > scoreB) {
-                //     $('#finalWinner').text("You win!");
-                // } else if (scoreB > scoreA) {
-                //     $('#finalWinner').text("You lose.");
-                // } else {
-                //     $('#finalWinner').text("Tie game!");
-                // }
             });
-            // socket.on('update scores', function (scores) {
-            //     let scoreA = scores[socket.id];
-            //     delete scores[socket.id];
-            //     let scoreB = scores[Object.keys(scores)[0]];
-            //     $('#scoreA').text(scoreA);
-            //     $('#scoreB').text(scoreB);
-            // });
             socket.on('active user disconnect', function () {
                 $('.right-text').css("background-color", "#F13C69");
                 $('#otherText').text('Uh oh, your partner has disconnected! Finding a new one in five seconds...');

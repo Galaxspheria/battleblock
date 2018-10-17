@@ -35,7 +35,7 @@ function getRandomPrompt () {
                 });
             }).on("error", (err) => {
                 console.log("Error: " + err.message);
-                reject();
+                resolve('Uh oh, there was an error loading a prompt! Freestyle time?');
             });
         })
     )
@@ -57,7 +57,6 @@ io.on('connection', function (socket) {
                 roomDir[otherSocket.id] = room;
                 roomCount++;
                 if (type == 'prompted') {
-                    // let prompt = Object.keys(CONSTANTS.PROMPTS)[Math.floor(Math.random() * Object.keys(CONSTANTS.PROMPTS).length)];
                     getRandomPrompt()
                     .then((prompt) => {
                         io.in(room).emit('start prompted room', prompt);
@@ -65,11 +64,7 @@ io.on('connection', function (socket) {
                             type,
                             prompt,
                             time: CONSTANTS.GAMETIME,
-                            timeLoop,
-                            // score: {
-                            //     [socket.id]: 0,
-                            //     [otherSocket.id]: 0
-                            // }
+                            timeLoop
                         };
                         let timeLoop = setInterval(function () {
                             if (activeGames[room]) {
@@ -83,13 +78,14 @@ io.on('connection', function (socket) {
                                         // store in game state too
                                     }
                                 } else {
-                                    // io.in(room).emit('end game', activeGames[room].score);
                                     io.in(room).emit('end game');
                                     clearInterval(activeGames[room].timeLoop);
                                 }
                             }
                         }, 1000)
-                    }) // TODO: catch error and use custom prompt if necessary
+                    }).catch((err) => {
+                        console.log('Error: ' + err);
+                    })
                 } else {
                     io.in(room).emit('start freewrite room');
                     activeGames[room] = {
@@ -122,11 +118,6 @@ io.on('connection', function (socket) {
     socket.on('update text', function (msg) {
         if (roomDir[socket.id]) {
             socket.broadcast.to(roomDir[socket.id]).emit('update text', msg);
-            // let newScore = score(msg, activeGames[roomDir[socket.id]].prompt);
-            // if (newScore !== activeGames[roomDir[socket.id]].score[socket.id]) {
-            //     activeGames[roomDir[socket.id]].score[socket.id] = newScore;
-            //     io.in(roomDir[socket.id]).emit('update scores', activeGames[roomDir[socket.id]].score);
-            // }
         }
     });
 });

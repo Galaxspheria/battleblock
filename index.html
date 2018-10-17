@@ -30,7 +30,7 @@
         .emphasis { font-weight: bold; color: #F13C69; }
         .score-label { display: inline-block; float: right; font-weight: bold; }
         #roomEnded { cursor: default; position: absolute; top: 0; bottom: 0; left: 0; right: 0; z-index: 1; display: flex;  align-items: center; justify-content: center; background-color: #0B0B0B; }
-        #roomEnabled, #menuLoading, #menuStarting, #menuPulse, #roomEnded { display: none; }
+        #roomEnabled, #menuLoading, #menuStarting, #menuPulse, #roomEnded, #otherQueue { display: none; }
         #countdown { font-size: 20pt; font-weight: bold; color: #F13C69; }
         #prompt { color: #0B0B0B; font-weight: bold; }
         #roomDisabled { height: 100vh; }
@@ -64,7 +64,7 @@
         transform: translate(0, 0); } 100% { transform: translate(19px, 0); } }
         @keyframes radial-pulse { 0% { box-shadow: 0 0 0 0px #F13C69; } 100% { box-shadow: 0 0 0 100vh rgba(0, 0, 0, 0); } }
         @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
-        #menuStarting, #roomDisabled, #roomEnabled, #roomEnded { animation: fadein 1s ease-out; }
+        #menuStarting, #roomDisabled, #roomEnabled, #roomEnded, #otherQueue { animation: fadein 1s ease-out; }
         .pulser { width: 1px; height: 1px; border-radius: 50%; animation: radial-pulse 1s; }
         ::selection { background: rgba(241,60,105, 0.2); } ::-moz-selection { background: rgba(241,60,105, 0.2); }
         textarea { resize: none; }
@@ -100,6 +100,10 @@
                 <div class="subtext">
                     Waiting for someone to join...
                 </div>
+                <p id="otherQueue" class="blurb center">
+                    Looks like someone is waiting for a <span id="otherQueueType">prompt</span> partner<br/><br/>
+                    <button id="otherQueueJoin">JOIN THEM</button>
+                </p>
             </div>
             <div id="menuStarting">
                 <div class="subtext">
@@ -193,12 +197,23 @@
             $('#back').click(function () {
                 location.reload();
             });
+            $('#otherQueueJoin').click(function () {
+                socket.emit('swap user queue');
+            });
+            socket.on('user in other queue', function (type) {
+                $('#otherQueue').css("display", "block");
+                $('#otherQueueType').text(type == 'freewrite' ? 'free write' : 'prompt');
+            });
+            socket.on('clear user in other queue', function () {
+                $('#otherQueue').css("display", "none");
+            });
             socket.on('update text', function (msg) {
                 $('#otherText').text(msg);
             });
             socket.on('start prompted room', function (prompt) {
                 $('#menuPulse').css("display", "block");
                 $('#menuLoading').css("display", "none");
+                $('#otherQueue').css("display", "none");
                 promptLength = prompt.length;
                 $('#prompt').text(prompt);
                 $('#otherText').text(prompt);
@@ -222,6 +237,7 @@
             socket.on('start freewrite room', function () {
                 $('#menuPulse').css("display", "block");
                 $('#menuLoading').css("display", "none");
+                $('#otherQueue').css("display", "none");
                 prompt = '';
                 promptLength = prompt.length;
                 $('#prompt').text(prompt);

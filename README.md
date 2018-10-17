@@ -7,7 +7,6 @@ Don't know where to start? Just can't motivate yourself to put words on the page
 ## Try it out [here](https://battleblock.herokuapp.com/).
 
 #### TODO:
-- [ ] option to join other game type if each queue has one person waiting for > x seconds
 - [ ] waiting messages (Keep it rough– no judgements here!)
 - [ ] loader only on one side if partner DCs during free write
 - [ ] domain?

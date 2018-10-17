@@ -9,6 +9,7 @@ var io = require('socket.io')(http);
 
 var roomCount = 0;
 var waiting = { prompted: [], freewrite: [] };
+var typeSwap = { prompted: "freewrite", freewrite: "prompted" }
 var roomDir = {};
 var activeGames = {};
 
@@ -45,12 +46,13 @@ app.use(express.static('public'));
 
 io.on('connection', function (socket) {
     console.log('user connected');
-    socket.on('join game queue', function (type) {
+    function joinGameQueue (type) {
         console.log('user joined game queue')
         if (type == 'prompted' || type == 'freewrite') {
             if (waiting[type].length > 0) {
                 let room = 'ROOM' + roomCount;
                 let otherSocket = waiting[type].shift();
+                if (waiting[typeSwap[type]].length > 0) { waiting[typeSwap[type]][0].emit('clear user in other queue') };
                 socket.join(room);
                 otherSocket.join(room);
                 roomDir[socket.id] = room;
@@ -60,12 +62,6 @@ io.on('connection', function (socket) {
                     getRandomPrompt()
                     .then((prompt) => {
                         io.in(room).emit('start prompted room', prompt);
-                        activeGames[room] = {
-                            type,
-                            prompt,
-                            time: CONSTANTS.GAMETIME,
-                            timeLoop
-                        };
                         let timeLoop = setInterval(function () {
                             if (activeGames[room]) {
                                 if (activeGames[room].time > 0) {
@@ -83,6 +79,12 @@ io.on('connection', function (socket) {
                                 }
                             }
                         }, 1000)
+                        activeGames[room] = {
+                            type,
+                            prompt,
+                            time: CONSTANTS.GAMETIME,
+                            timeLoop
+                        };
                     }).catch((err) => {
                         console.log('Error: ' + err);
                     })
@@ -95,16 +97,33 @@ io.on('connection', function (socket) {
                 console.log('started ' + room);
             } else {
                 waiting[type].push(socket);
+                setTimeout(function () {
+                    if (waiting[type].includes(socket) > 0 && waiting[typeSwap[type]].length > 0) {
+                        socket.emit('user in other queue', typeSwap[type]);
+                    }
+                }, 5000)
             }
         }
-        
+    }
+    socket.on('join game queue', function (type) {
+        joinGameQueue(type);
     });
-    socket.on('disconnect', function () {
+    function removeSocketFromQueues () {
         if (waiting.prompted.includes(socket)) {
             waiting.prompted.splice(waiting.prompted.indexOf(socket), 1);
+            if (waiting.freewrite.length > 0) { waiting.freewrite[0].emit('clear user in other queue'); };
+            return('prompted');
         } else if (waiting.freewrite.includes(socket)) {
             waiting.freewrite.splice(waiting.freewrite.indexOf(socket), 1);
+            if (waiting.prompted.length > 0) { waiting.prompted[0].emit('clear user in other queue'); };
+            return('freewrite');
         }
+    }
+    socket.on('swap user queue', function () {
+        joinGameQueue(typeSwap[removeSocketFromQueues()]);
+    })
+    socket.on('disconnect', function () {
+        removeSocketFromQueues();
         let room = roomDir[socket.id];
         if (room) {
             socket.broadcast.to(room).emit('active user disconnect');

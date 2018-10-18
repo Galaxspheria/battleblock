@@ -59,9 +59,9 @@
         button.green:hover { background-color: #3CF187; }
         button.black:hover { background-color: #0B0B0B; }
         button.alt { padding: 0; border: none; font-size: 12pt; text-transform: none; }
-        button.alt:hover { text-decoration: underline; background-color: rgba(0, 0, 0, 0); }
+        button.alt, .menu-bottom > a { -webkit-transition: all 300ms; transition: all 300ms; text-decoration: none; inset 0 -4px 0 rgba(241,60,105, 0.2); box-shadow: inset 0 -4px 0 rgba(241,60,105, 0.2);  }
+        button.alt:hover, button.alt.light:hover, .menu-bottom > a:hover { color: #F13C69; background-color: rgba(241,60,105, 0.2); text-decoration: none; box-shadow: none; }
         button.alt.light { color: #999999; font-size: 10pt; }
-        button.alt.light:hover { color: #F13C69; }
         button.block { display: block; margin: auto; }
         .lds-ellipsis { display: block; margin: auto; text-align: center; position: relative; width: 64px; height: 64px; } .lds-ellipsis div { position:
         absolute; top: 27px; width: 11px; height: 11px; border-radius: 50%; background: #F13C69; animation-timing-function:

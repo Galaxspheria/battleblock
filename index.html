@@ -287,7 +287,7 @@
                     $('.right-text').css("background-color", "#F13C69");
                     $('#otherText').text('Uh oh, your partner has disconnected! Finding a new one in five seconds...');
                     setTimeout( function () {
-                        socket.emit('join game queue', 'prompted');
+                        socket.emit('join game queue', (prompt == '' ? 'freewrite' : 'prompted'));
                         $('#roomDisabled').css("display", "block");
                         $('#roomEnabled').css("display", "none");
                         $('#menuLoading').css("display", "block");

@@ -168,6 +168,7 @@
         $(function () {
             var prompt = '';
             var promptLength = 0;
+            var activeGame = false;
             var socket = io();
             var startLoading = function () {
                 $('#menuLoading').css("display", "block");
@@ -223,6 +224,7 @@
                 $('#menuPulse').css("display", "block");
                 $('#menuLoading').css("display", "none");
                 $('#otherQueue').css("display", "none");
+                activeGame = true;
                 promptLength = prompt.length;
                 $('#prompt').text(prompt);
                 $('#otherText').text(prompt);
@@ -247,6 +249,7 @@
                 $('#menuPulse').css("display", "block");
                 $('#menuLoading').css("display", "none");
                 $('#otherQueue').css("display", "none");
+                activeGame = true;
                 prompt = '';
                 promptLength = prompt.length;
                 $('#prompt').text(prompt);
@@ -276,18 +279,22 @@
                 $('#roomEnded').css("display", "flex");
                 $('#roomEnded').css("position", "absolute");
                 $('#m').prop('readonly', true);
+                activeGame = false;
             });
             socket.on('active user disconnect', function () {
-                $('.right-text').css("background-color", "#F13C69");
-                $('#otherText').text('Uh oh, your partner has disconnected! Finding a new one in five seconds...');
-                setTimeout( function () {
-                    socket.emit('join game queue', 'prompted');
-                    $('#roomDisabled').css("display", "block");
-                    $('#roomEnabled').css("display", "none");
-                    $('#menuLoading').css("display", "block");
-                    $('#menuStarting').css("display", "none");
-                    $('.right-text').css("background-color", "#0B0B0B");
-                }, 5000);
+                if (activeGame) {
+                    activeGame = false;
+                    $('.right-text').css("background-color", "#F13C69");
+                    $('#otherText').text('Uh oh, your partner has disconnected! Finding a new one in five seconds...');
+                    setTimeout( function () {
+                        socket.emit('join game queue', 'prompted');
+                        $('#roomDisabled').css("display", "block");
+                        $('#roomEnabled').css("display", "none");
+                        $('#menuLoading').css("display", "block");
+                        $('#menuStarting').css("display", "none");
+                        $('.right-text').css("background-color", "#0B0B0B");
+                    }, 5000);
+                }
             });
         });
     </script>
